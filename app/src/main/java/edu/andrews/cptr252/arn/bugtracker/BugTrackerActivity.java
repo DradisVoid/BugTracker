@@ -8,6 +8,6 @@ public class BugTrackerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bugtracker);
+        setContentView(R.layout.activity_bug_tracker);
     }
 }

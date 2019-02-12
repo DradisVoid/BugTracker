@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BugTracker</string>
+    <string name="title_activity_bug">Enter a title for the bug</string>
 </resources>
