@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">BugTracker</string>
     <string name="title_activity_bug">Enter a title for the bug</string>
+    <string name="bug_title_label">Title</string>
+    <string name="bug_details_label">Details</string>
+    <string name="bug_solved_label">Solved?</string>
+    <string name="bug_description_hint">Describe the bug</string>
 </resources>
