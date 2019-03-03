@@ -14,11 +14,16 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import java.util.UUID;
+
 
 /**
  * Show the details for a bug and allow editing
  */
 public class BugDetailsFragment extends Fragment {
+    /** Key used to pass the id of a bug */
+    public static final String EXTRA_BUG_ID = "edu.andrews.cptr252.arn.bugtracker.bug_id";
+
     /** Tag for logging fragment messages */
     public static final String TAG = "BugDetailsFragment";
 
@@ -37,10 +42,33 @@ public class BugDetailsFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /**
+     * Create a new BugDetailsFragment with a given Bug id as an argument
+     * @param bugId
+     * @return A reference to the new BugDetailsFragment
+     */
+    public static BugDetailsFragment newInstance(UUID bugId) {
+        // Create a new argument Bundle object.
+        // Add the Bug id as a n argument
+        Bundle args = new Bundle();
+        args.putSerializable(EXTRA_BUG_ID, bugId);
+        // Create a new instance of BugDetailsFragment
+        BugDetailsFragment fragment = new BugDetailsFragment();
+        // Pass the bundle (containing the Bug id) to the fragment
+        // THe bundle will be unpacked in the fragment's onCreate(Bundle) method
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBug = new Bug(); // create new bug
+        // Extract bug id from Bundle
+        UUID bugId = (UUID)getArguments().getSerializable(EXTRA_BUG_ID);
+
+        // Get the bug with the id from the Bundle.
+        // This will be the bug that the fragment displays
+        mBug = BugList.getInstance(getActivity()).getBug(bugId);
     }
 
 
@@ -52,6 +80,7 @@ public class BugDetailsFragment extends Fragment {
 
         // get reference to EditText box for bug title
         mTitleField = v.findViewById(R.id.bug_title);
+        mTitleField.setText(mBug.getTitle());
         mTitleField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -72,6 +101,7 @@ public class BugDetailsFragment extends Fragment {
 
         // get reference to EditText box for bug description
         mDescriptionField = v.findViewById(R.id.bug_description);
+        mDescriptionField.setText(mBug.getDescription());
         mDescriptionField.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -96,6 +126,7 @@ public class BugDetailsFragment extends Fragment {
 
         // get reference to solved check box
         mSolvedCheckBox = v.findViewById(R.id.bug_solved);
+        mSolvedCheckBox.setChecked(mBug.isSolved());
         // toggle bug solved status when check box is tapped
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

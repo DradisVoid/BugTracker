@@ -1,6 +1,7 @@
 package edu.andrews.cptr252.arn.bugtracker;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
@@ -94,7 +95,22 @@ public class BugListFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         Bug bug = (Bug)(getListAdapter()).getItem(position);
-        Log.d(TAG, bug.getTitle() + " was clicked");
+
+        // start an instance of Bug Details Fragment
+        Intent i = new Intent(getActivity(), BugDetailsActivity.class);
+        // pass the id of the bug as an intent
+        i.putExtra(BugDetailsFragment.EXTRA_BUG_ID, bug.getId());
+        startActivity(i);
     }
 
+    /**
+     * Bug list fragment was paused (user was most likely editing a bug).
+     * Notify the adapter that the data set (Bug list) may have changed.
+     * THe adapter should update the views.
+     */
+    @Override
+    public void onResume() {
+        super.onResume(); // first execute the parent's onResume method
+        ((BugAdapter)getListAdapter()).notifyDataSetChanged();
+    }
 }
