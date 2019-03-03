@@ -2,6 +2,7 @@ package edu.andrews.cptr252.arn.bugtracker;
 
 import android.content.Context;
 import java.util.ArrayList;
+import java.util.UUID;
 
 /**
  * Manage list of bugs. This is a singleton class.
@@ -48,5 +49,18 @@ public class BugList {
      */
     public ArrayList<Bug> getBugs() {
         return mBugs;
+    }
+
+    /**
+     * Return the bug with the given id
+     * @param id Unique id for the bug
+     * @return Bug object or null if not found
+     */
+    public Bug getBug(UUID id) {
+        for(Bug bug : mBugs) {
+            if(bug.getId().equals(id))
+                return bug;
+        }
+        return null;
     }
 }
