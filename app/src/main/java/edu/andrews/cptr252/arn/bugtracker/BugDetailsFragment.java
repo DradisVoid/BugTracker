@@ -1,8 +1,11 @@
 package edu.andrews.cptr252.arn.bugtracker;
 
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -14,6 +17,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import java.util.Date;
 import java.util.UUID;
 
 
@@ -23,6 +27,12 @@ import java.util.UUID;
 public class BugDetailsFragment extends Fragment {
     /** Key used to pass the id of a bug */
     public static final String EXTRA_BUG_ID = "edu.andrews.cptr252.arn.bugtracker.bug_id";
+
+    /** Tag used to identify the DatePickerDialog in the FragmentManager */
+    private static final String DIALOG_DATE = "date";
+
+    /** Result code used for communication with DatePickerFragment */
+    private static final int REQUEST_DATE = 0;
 
     /** Tag for logging fragment messages */
     public static final String TAG = "BugDetailsFragment";
@@ -71,6 +81,12 @@ public class BugDetailsFragment extends Fragment {
         mBug = BugList.getInstance(getActivity()).getBug(bugId);
     }
 
+    /**
+     * Update the date displayed on the date button
+     * */
+    public void updateDate() {
+        mDateButton.setText(mBug.getDate().toString());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -120,9 +136,23 @@ public class BugDetailsFragment extends Fragment {
 
         // get reference to bug date button.
         mDateButton = v.findViewById(R.id.bug_date);
-        mDateButton.setText(mBug.getDate().toString());
-        // disable button for now. we will enable it at a later time
-        mDateButton.setEnabled(false);
+        // Set the date text on the bug date button
+        updateDate();
+        // Create a listener to handle date button clicks
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            // Launch the date picker dialog when user clicks the button
+            @Override
+            public void onClick(View v) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                // Create a new instance of the Date picker fragment
+                // Give it the current bug date
+                DatePickerFragment dialog = DatePickerFragment.newInstance(mBug.getDate());
+                // Let DatePickerFragment communicate directly with BugDetailsFragment
+                dialog.setTargetFragment(BugDetailsFragment.this, REQUEST_DATE);
+                // Display the DatePickerFragment
+                dialog.show(fm, DIALOG_DATE);
+            }
+        });
 
         // get reference to solved check box
         mSolvedCheckBox = v.findViewById(R.id.bug_solved);
@@ -140,4 +170,21 @@ public class BugDetailsFragment extends Fragment {
         return v;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            // user did not click ok in the dialog
+            // ignore intent
+            return;
+        }
+
+        if (requestCode == REQUEST_DATE) {
+            // a date is sent back in the intent. extract the date
+            Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+            // update the bug with the new date
+            mBug.setDate(date);
+            // update the bug date button text with the new date
+            updateDate();
+        }
+    }
 }
