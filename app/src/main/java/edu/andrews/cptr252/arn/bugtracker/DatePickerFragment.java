@@ -25,7 +25,7 @@ public class DatePickerFragment extends DialogFragment {
     Date mDate;
 
     /**
-     * Create a new isntance of fragment
+     * Create a new instance of fragment
      * @param date Given date when bug appears
      * @return an instance of the date picker fragment
      */
