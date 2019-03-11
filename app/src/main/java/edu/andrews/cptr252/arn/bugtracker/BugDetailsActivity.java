@@ -56,7 +56,7 @@ public class BugDetailsActivity extends FragmentActivity {
         // Search through the list of bugs until we find the bug
         // with the same id as the one extracted from the intent.
         for (int i = 0; i < mBugs.size(); i++) {
-            if (mBugs.get(i).equals(bugId)) {
+            if (mBugs.get(i).getId().equals(bugId)) {
                 mViewPager.setCurrentItem(i);
                 break;
             }
