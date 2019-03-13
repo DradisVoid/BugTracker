@@ -53,6 +53,7 @@ public class Bug {
         return mDescription;
     }
 
+    // set the description for a bug
     public void setDescription(String description) {
         mDescription = description;
     }
