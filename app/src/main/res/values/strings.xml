@@ -7,4 +7,5 @@
     <string name="bug_description_hint">Describe the bug</string>
     <string name="bug_list_label">Bugs</string>
     <string name="date_picker_title">Date bug discovered</string>
+    <string name="new_bug">New Bug</string>
 </resources>

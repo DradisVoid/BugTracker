@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -74,9 +77,45 @@ public class BugListFragment extends ListFragment {
         }
     } // end BugAdapter
 
+    /** Create a new bug, add it to the list, and launch the editor */
+    private void addBug() {
+        // create the new bug
+        Bug bug = new Bug();
+        // add to the list
+        BugList.getInstance(getActivity()).addBug(bug);
+        // create an intent to send to BugDetailsActivity
+        // add the bug Id as an extra so BugDetailsFragment can edit it.
+        Intent intent = new Intent(getActivity(), BugDetailsActivity.class);
+        intent.putExtra(BugDetailsFragment.EXTRA_BUG_ID, bug.getId());
+        // launch BugDetailsActivity which will launch BugDetailsFragment
+        startActivityForResult(intent, 0);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.menu_bug_list, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.menu_item_add_bug:
+                // new bug icon clicked
+                addBug();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setHasOptionsMenu(true);
+
         getActivity().setTitle(R.string.bug_list_label);
         mBugs = BugList.getInstance(getActivity()).getBugs();
 

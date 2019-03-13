@@ -17,16 +17,17 @@ public class BugList {
     /** Reference to information about app environment */
     private Context mAppContext;
 
+    /**
+     * Add a bug to the list
+     * @param bug is the bug to be added
+     */
+    public void addBug(Bug bug) {
+        mBugs.add(bug);
+    }
+
     private BugList(Context appContext) {
         mAppContext = appContext;
         mBugs = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            Bug bug = new Bug();
-            bug.setTitle("Bug #" + i);
-            // Every other one is solved
-            bug.setSolved((i % 2 == 0));
-            mBugs.add(bug);
-        }
     }
 
     /**
