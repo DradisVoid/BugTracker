@@ -170,6 +170,15 @@ public class BugDetailsFragment extends Fragment {
         return v;
     }
 
+    /**
+     * Save the bug list to a JSON file when app is paused
+     */
+    @Override
+    public void onPause() {
+        super.onPause();
+        BugList.getInstance(getActivity()).saveBugs();
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != Activity.RESULT_OK) {
