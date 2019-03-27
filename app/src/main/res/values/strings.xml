@@ -8,4 +8,5 @@
     <string name="bug_list_label">Bugs</string>
     <string name="date_picker_title">Date bug discovered</string>
     <string name="new_bug">New Bug</string>
+    <string name="delete_bug">Delete</string>
 </resources>

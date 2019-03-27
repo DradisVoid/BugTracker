@@ -6,11 +6,14 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
@@ -122,6 +125,66 @@ public class BugListFragment extends ListFragment {
         // use our custom bug adapter for generating views for each bug
         BugAdapter adapter = new BugAdapter(mBugs);
         setListAdapter(adapter);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
+        View v = super.onCreateView(inflater, parent, savedInstanceState);
+
+        // get ListView for the ListFragment
+        ListView listView = v.findViewById(android.R.id.list);
+
+        // allow user to select multiple bugs in the list
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
+                // nothing to do
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                MenuInflater inflater = mode.getMenuInflater();
+                inflater.inflate(R.menu.bug_list_item_context, menu);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return false; // nothing to do
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.menu_item_delete_bug:
+                        BugAdapter adapter = (BugAdapter)getListAdapter();
+                        BugList bugList = BugList.getInstance(getActivity());
+                        // Check each bug in the list
+                        // If it is selected, delete the bug
+                        for (int i = adapter.getCount() - 1; i >= 0; i--) {
+                            if (getListView().isItemChecked(i)) {
+                                // Bug has been selected. Delete it.
+                                bugList.deleteBug(adapter.getItem(i));
+                            }
+                        }
+                        mode.finish();
+                        // We have changed the bug list
+                        // Tell the bug adapter to update the list of views
+                        adapter.notifyDataSetChanged();
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+                // nothing to do
+            }
+        });
+
+        return v;
     }
 
     /**

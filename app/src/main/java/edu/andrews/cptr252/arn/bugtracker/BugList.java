@@ -50,6 +50,15 @@ public class BugList {
         saveBugs();
     }
 
+    /**
+     * Delete a given bug from list of bugs
+     * @param bug is the bug to delete
+     */
+    public void deleteBug(Bug bug) {
+        mBugs.remove(bug);
+        saveBugs();
+    }
+
     private BugList(Context appContext) {
         mAppContext = appContext;
 
