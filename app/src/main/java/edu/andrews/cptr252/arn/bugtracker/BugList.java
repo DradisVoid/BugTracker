@@ -1,10 +1,18 @@
 package edu.andrews.cptr252.arn.bugtracker;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.UUID;
+
+import edu.andrews.cptr252.arn.bugtracker.database.BugCursorWrapper;
+import edu.andrews.cptr252.arn.bugtracker.database.BugDbHelper;
+import edu.andrews.cptr252.arn.bugtracker.database.BugDbSchema.BugTable;
+
 
 /**
  * Manage list of bugs. This is a singleton class.
@@ -14,8 +22,39 @@ public class BugList {
     /** Instance variable for BugList */
     private static BugList sOurInstance;
 
-    /** List of Bugs */
-    private ArrayList<Bug> mBugs;
+    /** SQLite DB where bugs are stored */
+    private SQLiteDatabase mDatabase;
+
+    /**
+     * Pack bug information into a ContentValues object
+     * @param bug to pack
+     * @return resulting ContentValues object
+     */
+    public static ContentValues getContentValues(Bug bug) {
+        ContentValues values = new ContentValues();
+        values.put(BugTable.Cols.UUID, bug.getId().toString());
+        values.put(BugTable.Cols.TITLE, bug.getTitle());
+        values.put(BugTable.Cols.DESCRIPTION, bug.getDescription());
+        values.put(BugTable.Cols.DATE, bug.getDate().getTime());
+        values.put(BugTable.Cols.SOLVED, bug.isSolved() ? 1 : 0);
+
+        return values;
+    }
+
+    private BugCursorWrapper queryBugs(String whereClause, String[] whereArgs) {
+        Cursor cursor = mDatabase.query(
+                BugTable.NAME,
+                null,   // Columns - null selects all columns
+                whereClause,
+                whereArgs,
+                null,   // groupBy
+                null,   //having
+                null    //orderby
+        );
+
+        return new BugCursorWrapper(cursor);
+    }
+
     /** Reference to information about app environment */
     private Context mAppContext;
 
@@ -27,27 +66,24 @@ public class BugList {
     private BugJSONSerializer mSerializer;
 
     /**
-     * Write bug list to JSON File
-     * @return true if successful, false otherwise
-     */
-    public boolean saveBugs() {
-        try {
-            mSerializer.saveBugs(mBugs);
-            Log.d(TAG, "Bugs saved to file");
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Error saving bugs: " + e);
-            return false;
-        }
-    }
-
-    /**
      * Add a bug to the list
      * @param bug is the bug to be added
      */
     public void addBug(Bug bug) {
-        mBugs.add(bug);
-        saveBugs();
+        ContentValues values = getContentValues(bug);
+        mDatabase.insert(BugTable.NAME, null, values);
+    }
+
+    /**
+     * Update information for a given bug
+     * @param bug contains the latest information for the bug
+     */
+    public void updateBug(Bug bug) {
+        String uuidString = bug.getId().toString();
+        ContentValues values = getContentValues(bug);
+
+        mDatabase.update(BugTable.NAME, values, BugTable.Cols.UUID + " = ? ",
+                new String[] { uuidString} );
     }
 
     /**
@@ -55,26 +91,17 @@ public class BugList {
      * @param bug is the bug to delete
      */
     public void deleteBug(Bug bug) {
-        mBugs.remove(bug);
-        saveBugs();
+        String uuidString = bug.getId().toString();
+        mDatabase.delete(BugTable.NAME, BugTable.Cols.UUID + " = ? ",
+                new String[] { uuidString} );
     }
 
     private BugList(Context appContext) {
-        mAppContext = appContext;
+        mAppContext = appContext.getApplicationContext();
 
-        // create our serializer to load and save bugs
-        mSerializer = new BugJSONSerializer(mAppContext, FILENAME);
-
-        try {
-            // load bugs from JSON file
-            mBugs = mSerializer.loadBugs();
-        } catch (Exception e) {
-            // Unable to load from file, so create empty bug list
-            // Either file does not exist (okay)
-            // Or file contains error (not great)
-            mBugs = new ArrayList<>();
-            Log.e(TAG, "Error loading bugs: " + e);
-        }
+        // Open DB file or create it if it does not already exist
+        // If the DB is older version, onUpgrade will be called
+        mDatabase = new BugDbHelper(mAppContext).getWritableDatabase();
     }
 
     /**
@@ -96,7 +123,20 @@ public class BugList {
      * @return Array of Bug objects
      */
     public ArrayList<Bug> getBugs() {
-        return mBugs;
+        ArrayList<Bug> bugs = new ArrayList<>();
+        BugCursorWrapper cursor = queryBugs(null, null);
+
+        try {
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                bugs.add(cursor.getBug());
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return bugs;
     }
 
     /**
@@ -105,10 +145,18 @@ public class BugList {
      * @return Bug object or null if not found
      */
     public Bug getBug(UUID id) {
-        for(Bug bug : mBugs) {
-            if(bug.getId().equals(id))
-                return bug;
+        BugCursorWrapper cursor = queryBugs(BugTable.Cols.UUID + " = ? ",
+                new String[] { id.toString()});
+
+        try {
+            if (cursor.getCount() == 0) {
+                return null;
+            }
+
+            cursor.moveToFirst();
+            return cursor.getBug();
+        } finally {
+            cursor.close();
         }
-        return null;
     }
 }

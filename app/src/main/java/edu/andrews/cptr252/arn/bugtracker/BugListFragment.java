@@ -29,8 +29,8 @@ public class BugListFragment extends ListFragment {
     /** Tag for message log */
     private static final String TAG = "BugListFragment";
 
-    /** Reference to list of bugs in display */
-    private ArrayList<Bug> mBugs;
+    /** Reference to adapter that generates views for bugs */
+    private BugAdapter mAdapter;
 
     public BugListFragment() {
         // Required empty public constructor
@@ -78,6 +78,11 @@ public class BugListFragment extends ListFragment {
             solvedCheckBox.setChecked(bug.isSolved());
             return convertView;
         }
+
+        public void setBugs(ArrayList<Bug> bugs) {
+            clear();
+            addAll(bugs);
+        }
     } // end BugAdapter
 
     /** Create a new bug, add it to the list, and launch the editor */
@@ -113,6 +118,20 @@ public class BugListFragment extends ListFragment {
         }
     }
 
+    /** Update the displayed bug list */
+    private void updateUI() {
+        BugList bugList = BugList.getInstance(getActivity());
+        ArrayList<Bug> bugs = bugList.getBugs();
+
+        if (mAdapter == null) {
+            mAdapter = new BugAdapter(bugs);
+            setListAdapter(mAdapter);
+        } else {
+            mAdapter.setBugs(bugs);
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,11 +139,9 @@ public class BugListFragment extends ListFragment {
         setHasOptionsMenu(true);
 
         getActivity().setTitle(R.string.bug_list_label);
-        mBugs = BugList.getInstance(getActivity()).getBugs();
 
         // use our custom bug adapter for generating views for each bug
-        BugAdapter adapter = new BugAdapter(mBugs);
-        setListAdapter(adapter);
+        updateUI();
     }
 
     @Override
@@ -133,6 +150,8 @@ public class BugListFragment extends ListFragment {
 
         // get ListView for the ListFragment
         ListView listView = v.findViewById(android.R.id.list);
+
+        updateUI();
 
         // allow user to select multiple bugs in the list
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
@@ -158,20 +177,19 @@ public class BugListFragment extends ListFragment {
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menu_item_delete_bug:
-                        BugAdapter adapter = (BugAdapter)getListAdapter();
                         BugList bugList = BugList.getInstance(getActivity());
                         // Check each bug in the list
                         // If it is selected, delete the bug
-                        for (int i = adapter.getCount() - 1; i >= 0; i--) {
+                        for (int i = mAdapter.getCount() - 1; i >= 0; i--) {
                             if (getListView().isItemChecked(i)) {
                                 // Bug has been selected. Delete it.
-                                bugList.deleteBug(adapter.getItem(i));
+                                bugList.deleteBug(mAdapter.getItem(i));
                             }
                         }
                         mode.finish();
                         // We have changed the bug list
-                        // Tell the bug adapter to update the list of views
-                        adapter.notifyDataSetChanged();
+                        // Update the list of views
+                        updateUI();
                         return true;
                     default:
                         return false;
@@ -213,6 +231,6 @@ public class BugListFragment extends ListFragment {
     @Override
     public void onResume() {
         super.onResume(); // first execute the parent's onResume method
-        ((BugAdapter)getListAdapter()).notifyDataSetChanged();
+        updateUI();
     }
 }
