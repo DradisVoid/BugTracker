@@ -63,12 +63,19 @@ public class Bug {
     }
 
     /**
-     * Create and initialize a new Bug.
+     * Create and initialize a new Bug
+     * @param id UUID for new bug
+     */
+    public Bug(UUID id) {
+        mId = id;
+        mDate = new Date();
+    }
+
+    /**
+     * Create and initialize a new Bug with random UUID.
      */
     public Bug() {
-        // Generate unique identifier for the new bug
-        mId = UUID.randomUUID();
-        mDate = new Date();
+        this(UUID.randomUUID());
     }
     /**
      * Return unique id for Bug.
