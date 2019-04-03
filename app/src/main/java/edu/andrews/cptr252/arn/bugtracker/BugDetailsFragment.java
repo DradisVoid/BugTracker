@@ -3,9 +3,14 @@ package edu.andrews.cptr252.arn.bugtracker;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.FileProvider;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -16,7 +21,12 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -47,6 +57,15 @@ public class BugDetailsFragment extends Fragment {
     private Bug mBug;
     /** Reference to title field for bug*/
     private EditText mTitleField;
+
+    /** Request code used for taking pictures */
+    private static final int REQUEST_PHOTO = 1;
+    /** Reference to camera button */
+    private ImageButton mPhotoButton;
+    /** Reference to image thumbnail */
+    private ImageView mPhotoView;
+    /** FIle containing image of bug */
+    private File mPhotoFile;
 
     public BugDetailsFragment() {
         // Required empty public constructor
@@ -79,6 +98,9 @@ public class BugDetailsFragment extends Fragment {
         // Get the bug with the id from the Bundle.
         // This will be the bug that the fragment displays
         mBug = BugList.getInstance(getActivity()).getBug(bugId);
+
+        // get the image file for this bug
+        mPhotoFile = BugList.getInstance(getActivity()).getPhotoFile(mBug);
     }
 
     /**
@@ -167,7 +189,54 @@ public class BugDetailsFragment extends Fragment {
             }
         });
 
+        // create intent used to start camera app
+        final Intent captureImage = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        // if camera is not available, disable camera functionality
+        PackageManager pm = getActivity().getPackageManager();
+        boolean canTakePhoto = false;
+        if (mPhotoFile != null && captureImage.resolveActivity(pm) != null) {
+            //we can create a photo file and the camera is available
+            canTakePhoto = true;
+            // Give the camera app the location and filename for the future image
+            // Put this information in the intent used to launch the app
+            Uri uri = FileProvider.getUriForFile(getActivity(),
+                    getActivity().getApplicationContext().getPackageName() + ".provider",
+                    mPhotoFile);
+            captureImage.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        }
+
+        // setup on-click listener for camera button
+        mPhotoButton = v.findViewById(R.id.bug_imageButton);
+        mPhotoButton.setImageResource(android.R.drawable.ic_menu_camera);
+        mPhotoButton.setEnabled(canTakePhoto);
+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // launch the camera activity
+                startActivityForResult(captureImage, REQUEST_PHOTO);
+            }
+        });
+        mPhotoView = v.findViewById(R.id.bug_imageView);
+        updatePhotoView();
+
         return v;
+    }
+
+    /** Update the thumbnail displayed in the image view. */
+    private void updatePhotoView() {
+        if (mPhotoFile == null || mPhotoFile.exists() == false) {
+            // No image available.
+            mPhotoView.setImageDrawable(null);
+        } else {
+            // Image is available. Display it in ImageView.
+            try {
+                FileInputStream fis = new FileInputStream(mPhotoFile);
+                mPhotoView.setImageBitmap(BitmapFactory.decodeStream(fis));
+            } catch (FileNotFoundException e) {
+                mPhotoView.setImageDrawable(null); // no image available
+            }
+        }
     }
 
     /**
@@ -194,6 +263,11 @@ public class BugDetailsFragment extends Fragment {
             mBug.setDate(date);
             // update the bug date button text with the new date
             updateDate();
+        }
+
+        if (requestCode == REQUEST_PHOTO) {
+            // User took a new picture with the camera app
+            updatePhotoView();
         }
     }
 }

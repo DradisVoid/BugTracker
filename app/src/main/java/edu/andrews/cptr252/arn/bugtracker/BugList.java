@@ -4,8 +4,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -158,5 +160,18 @@ public class BugList {
         } finally {
             cursor.close();
         }
+    }
+
+    /**
+     * Return file containing image for a given bug
+     * @param bug is the bug to get image for
+     * @return file containing image
+     */
+    public File getPhotoFile(Bug bug) {
+        File externalFilesDir = mAppContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (externalFilesDir == null) {
+            return null;
+        }
+        return new File(externalFilesDir, bug.getPhotoFilename());
     }
 }

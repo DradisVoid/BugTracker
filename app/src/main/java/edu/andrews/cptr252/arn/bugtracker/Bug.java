@@ -124,4 +124,11 @@ public class Bug {
     public void setDate(Date date) {
         mDate = date;
     }
+
+    /**
+     * Return the name of the image associated with the bug
+     */
+    public String getPhotoFilename() {
+        return "IMG_" + getId().toString() + ".jpg";
+    }
 }
