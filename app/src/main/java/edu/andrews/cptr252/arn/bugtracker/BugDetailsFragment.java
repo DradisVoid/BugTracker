@@ -2,6 +2,7 @@ package edu.andrews.cptr252.arn.bugtracker;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -71,6 +72,30 @@ public class BugDetailsFragment extends Fragment {
         // Required empty public constructor
     }
 
+    /** Required interface to be implemented in hosting activities */
+    public interface Callbacks {
+        void onBugUpdated(Bug bug);
+    }
+
+    private Callbacks mCallbacks;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbacks = (Callbacks)context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
+    public void updateBug() {
+        BugList.getInstance(getActivity()).updateBug(mBug);
+        mCallbacks.onBugUpdated(mBug);
+    }
+
     /**
      * Create a new BugDetailsFragment with a given Bug id as an argument
      * @param bugId
@@ -130,6 +155,7 @@ public class BugDetailsFragment extends Fragment {
                 mBug.setTitle(s.toString());
                 // write the new title to the message log for debugging
                 Log.d(TAG, "Title changed to " + mBug.getTitle());
+                updateBug();
             }
             @Override
             public void afterTextChanged(Editable s) {
@@ -186,6 +212,7 @@ public class BugDetailsFragment extends Fragment {
                 // set the bugs's solved property
                 mBug.setSolved(isChecked);
                 Log.d(TAG, "Set solved status to "+isChecked);
+                updateBug();
             }
         });
 
@@ -261,6 +288,7 @@ public class BugDetailsFragment extends Fragment {
             Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
             // update the bug with the new date
             mBug.setDate(date);
+            updateBug();
             // update the bug date button text with the new date
             updateDate();
         }

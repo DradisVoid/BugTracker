@@ -1,6 +1,7 @@
 package edu.andrews.cptr252.arn.bugtracker;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -85,18 +86,36 @@ public class BugListFragment extends ListFragment {
         }
     } // end BugAdapter
 
+    /** Required interface to be implemented in hosting activities */
+    public interface Callbacks {
+        void onBugSelected(Bug bug);
+    }
+
+    private Callbacks mCallbacks;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallbacks = (Callbacks)context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallbacks = null;
+    }
+
     /** Create a new bug, add it to the list, and launch the editor */
     private void addBug() {
         // create the new bug
         Bug bug = new Bug();
         // add to the list
         BugList.getInstance(getActivity()).addBug(bug);
-        // create an intent to send to BugDetailsActivity
-        // add the bug Id as an extra so BugDetailsFragment can edit it.
-        Intent intent = new Intent(getActivity(), BugDetailsActivity.class);
-        intent.putExtra(BugDetailsFragment.EXTRA_BUG_ID, bug.getId());
-        // launch BugDetailsActivity which will launch BugDetailsFragment
-        startActivityForResult(intent, 0);
+
+        // Let the activity decide to launch
+        // details fragment or update bug in current
+        // details fragment (in case of split screen)
+        mCallbacks.onBugSelected(bug);
     }
 
     @Override
@@ -119,7 +138,7 @@ public class BugListFragment extends ListFragment {
     }
 
     /** Update the displayed bug list */
-    private void updateUI() {
+    public void updateUI() {
         BugList bugList = BugList.getInstance(getActivity());
         ArrayList<Bug> bugs = bugList.getBugs();
 
@@ -216,11 +235,8 @@ public class BugListFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         Bug bug = (Bug)(getListAdapter()).getItem(position);
 
-        // start an instance of Bug Details Fragment
-        Intent i = new Intent(getActivity(), BugDetailsActivity.class);
-        // pass the id of the bug as an intent
-        i.putExtra(BugDetailsFragment.EXTRA_BUG_ID, bug.getId());
-        startActivity(i);
+        // Let the activity decide how selected bug is displayed
+        mCallbacks.onBugSelected(bug);
     }
 
     /**

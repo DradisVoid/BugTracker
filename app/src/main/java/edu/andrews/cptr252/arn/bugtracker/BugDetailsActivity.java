@@ -10,12 +10,17 @@ import android.support.v4.view.ViewPager;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class BugDetailsActivity extends FragmentActivity {
+public class BugDetailsActivity extends FragmentActivity implements BugDetailsFragment.Callbacks {
     /** Viewpager component that allows you to browse bugs by swiping */
     private ViewPager mViewPager;
 
     /** Array of bugs */
     private ArrayList<Bug> mBugs;
+
+    @Override
+    public void onBugUpdated(Bug bug) {
+        // do nothing
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
